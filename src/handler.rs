@@ -11,7 +11,7 @@ use serde_json::json;
 
 use crate::{
     model::ToDoModel,
-    schema::{CreateToDoSchema, FilterOptions, UpdateToDoSchmea},
+    schema::{CreateToDoSchema, FilterOptions},
     AppState,
 };
 

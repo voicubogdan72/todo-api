@@ -1,25 +1,15 @@
-FROM messense/rust-musl-cross:x86_64-musl as chef
-ENV SQLX_OFFLINE=true
-RUN cargo install cargo-chef
+FROM rust:1.70.0 as builder
+
 WORKDIR /todo-api
 
-FROM chef AS planner
-# Copy source code from previous stage
-COPY . .
-# Generate info for caching dependencies
-RUN cargo chef prepare --recipe-path recipe.json
+COPY ./Cargo.lock ./Cargo.lock
+COPY ./Cargo.toml ./Cargo.toml
+COPY ./src ./src
 
-FROM chef AS builder
-COPY --from=planner /todo-api/recipe.json recipe.json
-# Build & cache dependencies
-RUN cargo chef cook --release --target x86_64-unknown-linux-musl --recipe-path recipe.json
-# Copy source code from previous stage
-COPY . .
-# Build application
-RUN cargo build --release --target x86_64-unknown-linux-musl
+RUN cargo build --release
+RUN rm src/*.rs
 
-# Create a new stage with a minimal image
-FROM scratch
-COPY --from=builder /todo-api/target/x86_64-unknown-linux-musl/release/todo-api /todo-api
-ENTRYPOINT ["/todo-api"]
-EXPOSE 3000
+# The final base image
+FROM debian:buster-slim
+COPY --from=builder /todo-api/target/release/todo-api /usr/src/todo-api
+CMD ["/usr/src/todo-api"]
