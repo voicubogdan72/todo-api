@@ -1,8 +1,22 @@
 version: "3"
 services:
+  api:
+    image: rust-api/todo-api
+    environment:
+      DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db:5432"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
   postgres:
     image: postgres:latest
     container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "6500:5432"
     volumes:
